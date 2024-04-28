@@ -1,5 +1,4 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext';
-import fs from 'fs';
 import OpenAI from 'openai';
 import { TextToSpeechClient, protos } from '@google-cloud/text-to-speech';
 
@@ -18,11 +17,10 @@ export default class TextToSpeechController {
       const chatCompletion = await openai.chat.completions.create({
         messages: [{ role: 'user', content: prompt }],
         model: 'gpt-3.5-turbo',
-        max_tokens: 1024, 
+        max_tokens: 1024,
       });
 
       const text = chatCompletion.choices[0].message.content?.trim() ?? '';
-
       if (!text) {
         return response.internalServerError({ message: 'Não foi possível gerar o texto a partir do prompt fornecido.' });
       }
@@ -39,11 +37,10 @@ export default class TextToSpeechController {
       };
 
       const [ttsResponse] = await client.synthesizeSpeech(ttsRequest);
-
       if (ttsResponse.audioContent) {
-        await fs.promises.writeFile('output.mp3', ttsResponse.audioContent, 'binary');
-        console.log('Áudio gerado com sucesso: output.mp3');
-        return response.ok({ message: 'Áudio gerado com sucesso: output.mp3' });
+        response.response.setHeader('Content-Type', 'audio/mpeg');
+        response.response.setHeader('Content-Disposition', `attachment; filename="output.mp3"`);
+        return response.send(ttsResponse.audioContent);
       } else {
         console.error('Nenhum conteúdo de áudio foi recebido.');
         return response.internalServerError({ error: 'Nenhum conteúdo de áudio foi recebido.' });

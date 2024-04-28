@@ -24,7 +24,7 @@ Route.get('/home', async () => {
   return {  api: 'on' }
 })
 
-Route.get('/create-audio', 'TextToSpeechesController.generateAndConvert')
+Route.post('/create-audio', 'TextToSpeechesController.generateAndConvert')
 Route.post('/create-video', 'MediaController.generateTextCreateSlidesAndConvertToVideo');
 Route.post('/create-presentation', 'PresentationsController.generatePresentation');
 Route.post('/generate-quiz', 'QuizzesController.generateQuiz');
