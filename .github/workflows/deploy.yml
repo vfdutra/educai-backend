@@ -18,9 +18,8 @@ jobs:
 
       - name: Set up environment vars
         run: |
-         cat ${{ secrets.ENV }} > .env
-         cat ${{ secrets.GOOGLE_CREDENTIALS }} > google-credentials.json
-
+         echo "${{ secrets.ENV }}" > .env
+         echo "${{ secrets.GOOGLE_CREDENTIALS }}" > google-credentials.json
       - name: Build and push to registry
         uses: docker/build-push-action@v5
         with:
