@@ -1,0 +1,45 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Remove outdated .env files
+        run: |
+          rm -f ./.env
+          rm -f ./.env.example
+          rm -f ./.env.test
+
+      - name: Set up environment vars
+        run: |
+         cat ${{ secrets.ENV }} > .env
+         cat ${{ secrets.GOOGLE_CREDENTIALS }} > google-credentials.json
+
+      - name: Build and push to registry
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: almeidakaue/vfdutra-api:dev
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Transfer Docker image to remote server and start service
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 400 ~/.ssh/id_rsa
+        echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+        ssh infra@${{ vars.SERVER_ADDRES }} "docker pull almeidakaue/vfdutra-api:dev"
+        ssh infra@${{ vars.SERVER_ADDRES }} "docker stop $(docker ps | grep api-tcc | awk '{print $1}')"
+        ssh infra@${{ vars.SERVER_ADDRES }} "docker run -d -p 3333:3333 --name api-tcc almeidakaue/vfdutra-api:dev"
