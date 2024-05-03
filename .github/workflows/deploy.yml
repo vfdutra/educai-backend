@@ -20,11 +20,12 @@ jobs:
         run: |
          echo "${{ secrets.ENV }}" > .env
          echo "${{ secrets.GOOGLE_CREDENTIALS }}" > google-credentials.json
+         
       - name: Build and push to registry
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: Dockerfile
+          file: ./Dockerfile
           push: true
           tags: almeidakaue/vfdutra-api:dev
 
