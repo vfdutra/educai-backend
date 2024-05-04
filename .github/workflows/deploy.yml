@@ -53,5 +53,5 @@ jobs:
         chmod 400 ~/.ssh/id_rsa
         echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
         ssh infra@${{ vars.SERVER_ADDRES }} "docker pull almeidakaue/vfdutra-api:dev"
-        ssh infra@${{ vars.SERVER_ADDRES }} "docker stop $(docker ps | grep api-tcc | awk '{print $1}')"
+        ssh infra@${{ vars.SERVER_ADDRES }} "docker stop api-tcc && docker rm api-tcc"
         ssh infra@${{ vars.SERVER_ADDRES }} "docker run -d -p 3333:3333 --name api-tcc almeidakaue/vfdutra-api:dev"
