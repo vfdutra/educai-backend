@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Remove outdated .env files
         run: |
           rm -f ./.env
@@ -18,8 +21,8 @@ jobs:
 
       - name: Set up environment vars
         run: |
-         echo "${{ secrets.ENV }}" > .env
-         echo "${{ secrets.GOOGLE_CREDENTIALS }}" > google-credentials.json
+          echo "${{ secrets.ENV }}" > .env
+          echo "${{ secrets.GOOGLE_CREDENTIALS }}" > google-credentials.json
 
       - name: Set build
         uses: docker/setup-buildx-action@v3
