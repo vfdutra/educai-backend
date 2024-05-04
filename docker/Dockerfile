@@ -7,7 +7,7 @@ COPY . ./
 RUN npm install
 RUN npm run build
 COPY .env build/
-COPY google-crendtials.json build/
+COPY google-credentials.json build/
 RUN cd build/ && npm ci --production
 
 EXPOSE 3333
