@@ -20,6 +20,9 @@ jobs:
         run: |
          echo "${{ secrets.ENV }}" > .env
          echo "${{ secrets.GOOGLE_CREDENTIALS }}" > google-credentials.json
+
+      - name: Set build
+        uses: docker/setup-buildx-action@v3
          
       - name: Build and push to registry
         uses: docker/build-push-action@v5
