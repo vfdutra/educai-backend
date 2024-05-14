@@ -14,18 +14,16 @@ export default class TextToSpeechController {
         apiKey: process.env.CHATGPT_API_KEY,
       });
 
-      const text = 'Olá, tudo bem? Como posso te ajudar?';
+      const chatCompletion = await openai.chat.completions.create({
+        messages: [{ role: 'user', content: prompt }],
+        model: 'gpt-3.5-turbo',
+        max_tokens: 1024,
+      });
 
-      // const chatCompletion = await openai.chat.completions.create({
-      //   messages: [{ role: 'user', content: prompt }],
-      //   model: 'gpt-3.5-turbo',
-      //   max_tokens: 1024,
-      // });
-
-      // const text = chatCompletion.choices[0].message.content?.trim() ?? '';
-      // if (!text) {
-      //   return response.internalServerError({ message: 'Não foi possível gerar o texto a partir do prompt fornecido.' });
-      // }
+      const text = chatCompletion.choices[0].message.content?.trim() ?? '';
+      if (!text) {
+        return response.internalServerError({ message: 'Não foi possível gerar o texto a partir do prompt fornecido.' });
+      }
 
       if (!process.env.GOOGLE_APPLICATION_CREDENTIALS) {
         throw new Error('A variável de ambiente GOOGLE_APPLICATION_CREDENTIALS não está definida.');
