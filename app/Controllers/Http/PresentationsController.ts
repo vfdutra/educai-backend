@@ -4,6 +4,7 @@ import officegen from 'officegen';
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext';
 import Application from '@ioc:Adonis/Core/Application';
 import fs from 'fs';
+import path from 'path';
 
 export default class PresentationsController {
   public async generatePresentation({ request, response }: HttpContextContract) {
@@ -18,29 +19,39 @@ export default class PresentationsController {
 
     try {
       const chatCompletion = await openai.chat.completions.create({
-        messages: [{ role: 'user', content: prompt }],
+        messages: [
+          { role: 'system', content: 'Format the following text as HTML for slides.' },
+          { role: 'user', content: prompt }
+        ],
         model: 'gpt-3.5-turbo',
-        max_tokens: 150,
+        max_tokens: 1024,
       });
 
       const content = chatCompletion.choices[0].message.content;
-      const paragraphs = (content || '').split('\n');
+      const slidesContent = content?.split('<slide>').slice(1);
 
       let pptx = officegen('pptx');
 
-      paragraphs.forEach(paragraph => {
-        if (paragraph) { 
+      slidesContent?.forEach(slideContent => {
+        if (slideContent) {
           let slide = pptx.makeNewSlide();
-          slide.addText(paragraph, { x: 0.0, y: 0.0, w: '100%', h: '100%', align: 'center' });
+          slide.addText(slideContent.trim(), { x: 0.0, y: 0.0, w: '100%', h: '100%', align: 'center' });
         }
       });
 
-      const filePath = Application.tmpPath('presentation.pptx');
-      let stream = fs.createWriteStream(filePath);
-      pptx.generate(stream);
-      
-      stream.on('close', () => {
-        response.download(filePath, true);
+      const pptxPath = path.join(Application.tmpPath(), 'presentation.pptx');
+      const outStream = fs.createWriteStream(pptxPath, { flags: 'w' });
+
+      pptx.generate(outStream, {
+        finalize: function () {
+          response.header('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
+          response.header('Content-Disposition', 'attachment; filename="presentation.pptx"');
+          response.download(pptxPath);
+        },
+        error: function (err) {
+          console.error('Erro ao gerar o PPTX:', err);
+          response.internalServerError({ message: 'Erro ao gerar a apresentação.' });
+        }
       });
 
     } catch (error) {

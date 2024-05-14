@@ -7,10 +7,11 @@ import sharp from 'sharp';
 import { TextToSpeechClient, protos } from '@google-cloud/text-to-speech';
 import ffmpeg from 'fluent-ffmpeg';
 import fs from 'fs';
+import path from 'path';
 
 export default class MediaController {
   public async generateTextCreateSlidesAndConvertToVideo({ request, response }: HttpContextContract) {
-    const audioPath = Application.tmpPath('audio.mp3');
+    const audioPath = path.join(Application.tmpPath(), 'audio.mp3');
     const prompt = request.input('prompt');
     if (!prompt) {
       return response.badRequest({ message: 'Prompt is required' });
@@ -56,10 +57,10 @@ export default class MediaController {
         throw new Error('No audio content received');
       }
 
-      const slidePath = Application.tmpPath('slide.png');
+      const slidePath = path.join(Application.tmpPath(), 'slide.png');
       await sharp(slidesBuffer).toFile(slidePath);
 
-      const outputVideoPath = Application.tmpPath('output.mp4');
+      const outputVideoPath = path.join(Application.tmpPath(), 'output.mp4');
       ffmpeg()
         .input(slidePath)
         .input(audioPath)
@@ -71,7 +72,15 @@ export default class MediaController {
           '-r 25',
         ])
         .output(outputVideoPath)
-        .on('end', () => response.download(outputVideoPath))
+        .on('end', () => {
+          response.header('Content-Type', 'video/mp4');
+          response.header('Content-Disposition', 'attachment; filename="output.mp4"');
+          return response.download(outputVideoPath);
+        })
+        .on('error', (err) => {
+          console.error('Error generating video:', err);
+          return response.internalServerError({ message: 'Failed to generate video presentation.' });
+        })
         .run();
 
     } catch (error) {
