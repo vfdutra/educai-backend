@@ -40,8 +40,8 @@ export default class QuizController {
           model: 'gpt-3.5-turbo',
           max_tokens: 200,
         });
-
         const questionData: QuizQuestion = JSON.parse(chatCompletion.choices[0].message.content || '{}');
+
         if (!questionData.question || !questionData.options || !questionData.answer) {
           return response.internalServerError({ message: 'Failed to generate valid quiz question.' });
         }
